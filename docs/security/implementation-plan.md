@@ -2,7 +2,7 @@
 
 ## 상태와 승인 경계
 
-사용자와 합의한 방향을 정리한 계획이다. [초기 조사](initial-assessment.md) 및 승인된 OpenClaw 중지는 에이전트가 수행했다. 이후 사용자는 CUPS 중지, Tailscale 설치·경로 설정·정책 적용 및 SSH/API 연결 성공을 보고했다. 이후 사용자 보고로 Dex GitHub 로그인 및 8443 issuer를 통한 Kubernetes OIDC 인증이 확인됐다. 개인 OIDC cluster-admin Binding은 요청에 따라 템플릿을 준비했으며 적용 검증은 미확인이다. Vault와 LAN 직접 관리 접근 차단은 아직 계획이다. 사용자 요청에 따라 후속 서버 변경은 직접 실행할 명령을 안내하며 에이전트가 대신 실행하지 않는다. 유료 자원은 별도 승인 없이 생성하지 않는다. 위키는 생성하거나 수정하지 않는다.
+사용자와 합의한 방향을 정리한 계획이다. [초기 조사](initial-assessment.md) 및 승인된 OpenClaw 중지는 에이전트가 수행했다. 이후 사용자는 CUPS 중지, Tailscale 설치·경로 설정·정책 적용 및 SSH/API 연결 성공을 보고했다. 이후 사용자 보고로 Dex GitHub 로그인 및 8443 issuer를 통한 Kubernetes OIDC 인증이 확인됐다. 개인 OIDC cluster-admin Binding은 템플릿을 준비한 뒤 사용자 제공 결과로 광범위한 권한 검사 및 노드·전체 Pod 조회 성공을 확인했다. Vault와 LAN 직접 관리 접근 차단은 아직 계획이다. 사용자 요청에 따라 후속 서버 변경은 직접 실행할 명령을 안내하며 에이전트가 대신 실행하지 않는다. 유료 자원은 별도 승인 없이 생성하지 않는다. 위키는 생성하거나 수정하지 않는다.
 
 ## 목표와 위협
 
@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | VPN | OS 수준 Tailscale 우선 | 현행 무료 약관·한도·필요 기능, 사용자/기기, 계정 복구, 접근 정책 |
 | 사람 인증 | GitHub → Dex → Kubernetes OIDC | Dex 배치·저장소·HTTPS issuer·클라이언트 방식, GitHub 허용 대상과 claims |
-| RBAC | 본인의 정확한 OIDC User에 cluster-admin, 기존 인증서는 비상용 | 개인 Binding 적용 검증; 다른 사용자는 최소 권한 |
+| RBAC | 본인의 정확한 OIDC User에 cluster-admin, 기존 인증서는 비상용 | 사용자 보고로 권한·조회 검증 완료; 다른 사용자는 최소 권한 |
 | Vault | minipc OS의 단일 노드 우선 | 저장소, TLS, 수동 unseal/auto-unseal, 암호화 외부 백업 |
 | 워크로드 인증 | 전용 SA → Vault Kubernetes auth | reviewer 자격 증명 수명·갱신, audience, namespace/SA binding |
 | 시크릿 전달 | Agent/CSI와 ESO 비교 | Kubernetes Secret 복제 여부, 갱신과 앱 reload, 장애 동작 |
