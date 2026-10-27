@@ -2,7 +2,7 @@
 
 ## 출처와 상태
 
-사용자가 관리 화면에 적용한 정책을 대화로 제공했고 VPN을 통한 SSH·API 접속 성공을 보고했다. 그 정책의 hosts/grants/tests를 유지하고 주소만 placeholder로 바꿔 [템플릿](../../network/tailscale/policy.hujson.example)에 저장했다. 에이전트가 관리 화면이나 외부 네트워크에서 재검증한 것은 아니다. 외부 핫스팟 검증 여부는 별도로 확인한다.
+사용자가 관리 화면에 적용한 정책을 대화로 제공했고 VPN을 통한 SSH·API 접속 성공을 보고했다. 그 정책의 주소를 placeholder로 바꾸고, 이후 Dex 8443 구성에 맞춰 VPN IP의 TCP 8443 허용 및 443 거부 테스트를 추가해 [템플릿](../../network/tailscale/policy.hujson.example)에 저장했다. 에이전트가 관리 화면이나 외부 네트워크에서 재검증한 것은 아니다. 외부 핫스팟 검증 여부는 별도로 확인한다.
 
 이 템플릿은 기기 등록·경로 광고·경로 승인을 수행하지 않는다. placeholder가 남은 상태로는 적용할 수 없다. IP 주소 자체는 인증 비밀이 아니지만 환경 정보를 분리하고 재사용하기 위해 템플릿화했다.
 
@@ -10,13 +10,13 @@
 
 | 출발지 | 목적지 | 허용 |
 | --- | --- | --- |
-| 지정 Windows 노트북 | minipc Tailscale IPv4 | TCP 22 |
+| 지정 Windows 노트북 | minipc Tailscale IPv4 | TCP 22, 8443 |
 | 지정 Windows 노트북 | minipc LAN IPv4 | TCP 22, 6443 |
 
 - `hosts`는 정책 내부의 주소 별칭이며 MagicDNS나 SSH config 설정이 아니다.
 - Windows가 VPN을 담당하며 WSL은 그 경로로 접속한다.
 - 기존 LAN 주소를 유지하기 위해 minipc가 자기 LAN IPv4의 `/32` 경로를 광고하고 관리 화면에서 승인해야 한다. 현재 사용자는 해당 구성의 연결 성공을 보고했다.
-- Tailscale IP의 SSH 허용은 별도 접근 경로로 유지한다. 해당 IP의 API 접근은 허용하지 않는다.
+- Tailscale IP의 SSH 허용은 별도 접근 경로로 유지하고 Dex HTTPS는 8443으로 제공한다. 해당 IP의 API 6443 및 이전 Dex 443 접근은 허용하지 않는다. 실제 정책의 이전 443 허용 제거 여부는 적용 시 확인한다.
 - 일반 LAN으로 직접 전달되는 트래픽은 이 정책의 통제 대상이 아니다.
 - 같은 사용자 계정의 새 기기라도 지정 출발지 주소가 아니면 이 규칙으로 접근할 수 없다. 기기 삭제·재등록 시 주소 매핑을 확인한다.
 - Tailscale SSH 정책은 없으며 기존 OpenSSH 인증을 사용한다.

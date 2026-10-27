@@ -11,7 +11,7 @@
     {
       "src": ["admin-laptop"],
       "dst": ["minipc"],
-      "ip": ["tcp:22"]
+      "ip": ["tcp:22", "tcp:8443"]
     },
     {
       "src": ["admin-laptop"],
@@ -23,8 +23,8 @@
   "tests": [
     {
       "src": "admin-laptop",
-      "accept": ["minipc:22"],
-      "deny": ["minipc:6443", "minipc:631", "minipc:18789"]
+      "accept": ["minipc:22", "minipc:8443"],
+      "deny": ["minipc:443", "minipc:6443", "minipc:631", "minipc:18789"]
     },
     {
       "src": "admin-laptop",

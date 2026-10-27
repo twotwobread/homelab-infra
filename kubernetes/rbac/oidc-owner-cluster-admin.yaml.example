@@ -1,0 +1,14 @@
+# Privileged template: replace the exact username returned by OIDC auth whoami.
+# Do not bind system:authenticated or another broad group.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: homelab-owner-oidc-cluster-admin
+subjects:
+  - kind: User
+    name: "<OIDC_USERNAME_WITH_PREFIX>"
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
