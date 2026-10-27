@@ -21,6 +21,13 @@ secrets.local/
 /hosts/minipc/k3s/config.local.yaml
 /kubernetes/rbac/oidc-owner-cluster-admin.local.yaml
 
+# Vault runtime configuration, private TLS material and recovery artifacts
+/auth/vault/.env
+/auth/vault/vault.local.hcl
+/auth/vault/tls.local/
+/auth/vault/recovery.local/
+/auth/vault/*.snap
+
 # Local tooling, state and generated dependencies
 .pi/npm/
 node_modules/

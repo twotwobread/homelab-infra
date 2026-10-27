@@ -1,0 +1,25 @@
+# Replace placeholders before starting; this is NOT dev mode.
+ui = true
+# Required by this design for Integrated Storage. Disable host swap before use.
+disable_mlock = true
+
+api_addr = "https://<VAULT_DNS_NAME>:8200"
+# Single-node bootstrap only; do not reuse this for a multi-node cluster.
+cluster_addr = "https://127.0.0.1:8201"
+
+storage "raft" {
+  path    = "/vault/data"
+  node_id = "minipc-vault-1"
+}
+
+listener "tcp" {
+  address         = "0.0.0.0:8200"
+  cluster_address = "0.0.0.0:8201"
+  tls_disable     = false
+  tls_min_version = "tls12"
+  tls_cert_file   = "/vault/tls/server.crt"
+  tls_key_file    = "/vault/tls/server.key"
+}
+
+log_level  = "info"
+log_format = "json"
