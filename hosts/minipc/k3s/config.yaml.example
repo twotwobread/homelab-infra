@@ -1,0 +1,14 @@
+# Host configuration, NOT a Kubernetes manifest.
+# Merge with /etc/rancher/k3s/config.yaml; never blindly overwrite existing options.
+node-name: minipc
+node-ip: "<MINIPC_LAN_IPV4>"
+advertise-address: "<MINIPC_LAN_IPV4>"
+
+tls-san:
+  - "<MINIPC_LAN_IPV4>"
+
+kube-apiserver-arg:
+  - "oidc-issuer-url=<OIDC_ISSUER_URL>"
+  - "oidc-client-id=homelab-kubectl"
+  - "oidc-username-claim=sub"
+  - "oidc-username-prefix=oidc:"
