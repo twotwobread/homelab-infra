@@ -2,7 +2,7 @@
 
 ## 상태와 근거
 
-사용자 보고로 Docker Compose 실행, Windows/WSL GitHub 로그인, 8443 issuer 전환 후 Kubernetes `auth whoami` 성공을 확인했다. 에이전트가 운영 서버에서 독립 검증한 것은 아니다. 그룹은 `system:authenticated`였으며 이 자체가 관리자 권한을 뜻하지 않는다. 개인 사용자 cluster-admin Binding은 요청에 따라 템플릿을 추가했으며 적용 성공은 아직 보고되지 않았다.
+사용자 보고로 Docker Compose 실행, Windows/WSL GitHub 로그인, 8443 issuer 전환 후 Kubernetes `auth whoami` 성공을 확인했다. 에이전트가 운영 서버에서 독립 검증한 것은 아니다. 그룹은 `system:authenticated`였으며 이 자체가 관리자 권한을 뜻하지 않는다. 이후 사용자 제공 결과로 개인 OIDC 신원의 cluster-admin 권한 검사와 노드·전체 Pod 조회 성공도 확인했다. 상세 권한 검증은 [관리자 검증 기록](oidc-admin-gitops.md#검증-기록)을 참고한다.
 
 환경: Tailscale 1.104.2, Docker 29.3.0, Compose v5.1.0. MagicDNS/HTTPS 활성화, GitHub 개인 OAuth App 사용, 조직 제한 없음. 서버 변경은 사용자가 직접 수행한다.
 
@@ -16,6 +16,47 @@
 - API 로그: issuer 인증서 이름 불일치 → OIDC authenticator 미초기화 → Unauthorized.
 
 K3s 관리 NAT 규칙을 수동 삭제하거나 잘못된 인증서를 신뢰하지 않고, Dex HTTPS를 8443으로 분리했다. Dex/GitHub callback/K3s/kubeconfig의 issuer를 함께 변경한 뒤 사용자가 OIDC 인증 성공을 보고했다. 443 Serve 및 이전 grant 제거 여부는 별도 확인한다.
+
+### 조사 및 전환 이력
+
+2026-10-27 사용자 제공 로그와 명령 출력에 근거한 기록이다. 정확한 전체 변경 시각이나 외부 패킷 캡처를 확보한 것은 아니다.
+
+1. WSL의 GitHub 로그인은 성공했지만 `kubectl auth whoami`는 Unauthorized였다. 브라우저 로그인 성공만으로 API 서버의 issuer 접근까지 검증된 것은 아니었다.
+2. K3s 로그에서 `oidc authenticator: initializing plugin`과 Traefik 기본 인증서의 이름 불일치가 반복됐다. 토큰 권한을 판단하기 전 OIDC 인증기가 초기화되지 못한 상태였다.
+3. `getent ahostsv4`와 `tailscale ip -4`가 일치했다. `curl --noproxy '*' --resolve ...`로 DNS와 HTTP proxy 영향을 배제한 로컬 요청도 인증서 검증에 실패했다.
+4. `iptables-save -t nat`에서 아래 경로를 확인했다. 목적지가 Tailscale IP여도 호스트 자신의 주소이므로 LOCAL 조건에 해당한다.
+
+```text
+API 서버의 로컬 TCP 443 요청
+  → NAT OUTPUT
+  → --dst-type LOCAL → CNI-HOSTPORT-DNAT
+  → --dports 80,443 → CNI-DN-* chain
+  → --dport 443 → ServiceLB Pod:443로 DNAT
+  → Traefik 기본 인증서 응답
+```
+
+5. 먼저 Serve 8443을 추가하고 노트북의 TCP 8443 접근을 허용했다. 이 시점에는 discovery에 이전 issuer가 출력되어도 정상이다. 전송 경로/TLS 검증과 issuer 설정 전환은 별개 단계다.
+6. 아래 설정을 일치시킨 뒤 Dex와 K3s를 필요한 순서로 재시작하고 다시 로그인했다.
+
+| 변경 대상 | 최종 값 |
+| --- | --- |
+| Tailscale Serve 리스너 | HTTPS 8443 → localhost HTTP 5556 |
+| Dex issuer | `https://<DEX_DNS_NAME>:8443` |
+| Dex GitHub redirectURI | `https://<DEX_DNS_NAME>:8443/callback` |
+| GitHub OAuth App callback | 위 redirectURI와 동일 |
+| K3s oidc-issuer-url | 새 Dex issuer |
+| kubeconfig exec issuer 인자 | 새 Dex issuer |
+| Tailscale 정책 | 지정 노트북 → minipc VPN IP TCP 8443 허용 |
+
+변경하지 않은 값은 Kubernetes API의 LAN 주소와 6443 포트, kubectl callback `http://localhost:8000`, Dex 내부 HTTP 5556, OAuth App Client ID/secret, Traefik의 기존 80/443이다. HTTPS 인증서는 호스트 이름을 검증하므로 포트 번호 때문에 별도 인증서 이름이 필요한 것은 아니다.
+
+### 결정 이유와 한계
+
+- 8443은 관리 서비스와 기존 ingress의 충돌을 피하기 위한 선택이며 포트 변경 자체가 보안 대책은 아니다. VPN 접근 정책과 TLS 검증이 보안 경계를 담당한다.
+- Traefik/ServiceLB의 바인딩을 재설계하는 대안보다 현재 ingress에 주는 영향이 작았다.
+- `curl -k`, TLS 검증 비활성화, Traefik 기본 인증서 신뢰 추가, K3s 관리 NAT 규칙 수동 삭제는 해결책으로 사용하지 않았다.
+- 호스트 소켓 목록 `ss`만으로 NAT가 처리하는 포트를 모두 알 수 없다. 같은 URL도 원격 클라이언트와 호스트 자체 요청의 경로가 다를 수 있다.
+- 최종 `auth whoami` 성공은 실제 토큰 인증 성공의 증거다. 모든 네트워크 경로의 패킷 추적이나 LAN 차단까지 완료됐다는 의미는 아니다.
 
 ## 구성
 

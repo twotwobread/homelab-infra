@@ -2,7 +2,25 @@
 
 ## 상태
 
-사용자는 8443 issuer 전환 후 `auth whoami`에서 `oidc:` 접두사의 개인 신원과 `system:authenticated` 그룹을 확인했다. 실제 subject/credential-id 원문은 저장하지 않는다. 개인 cluster-admin 권한을 요청하여 템플릿을 준비했으며, 적용과 권한 검증 완료는 아직 보고되지 않았다. 이 문서 작성으로 운영 설정을 변경하지 않는다.
+사용자는 8443 issuer 전환 후 `auth whoami`에서 `oidc:` 접두사의 개인 신원과 `system:authenticated` 그룹을 확인했다. 실제 subject/credential-id 원문은 저장하지 않는다. 이후 사용자 제공 출력으로 개인 cluster-admin 권한 및 실제 조회 성공을 확인했다. 이 문서 작성으로 운영 설정을 변경하지 않는다.
+
+## 검증 기록
+
+2026-10-27 사용자 제공 실행 결과에 근거한다. 에이전트가 별도 자격 증명으로 재실행한 검증은 아니다.
+
+| 명령/항목 | 관측 결과 |
+| --- | --- |
+| Binding 적용 전 diff | 정확한 OIDC User 하나를 cluster-admin에 연결하는 신규 ClusterRoleBinding |
+| OIDC context의 `auth whoami` | 기대한 `oidc:` 접두사의 개인 신원, `system:authenticated` 그룹 |
+| `auth can-i '*' '*' --all-namespaces` | yes |
+| `get nodes` | minipc control-plane 및 homelab-pi 모두 Ready |
+| `get pods -A` | 전체 namespace 조회 성공, 시스템 Pod Running 및 Helm 설치 Job Completed |
+
+RBAC는 사용자에게 권한을 연결하므로 `auth whoami`의 그룹에 cluster-admin이 추가되지 않는 것이 정상이다. 실제 Secret 값 조회나 파괴적 작업으로 권한을 검증하지 않았다. 로그의 subject와 JTI 원문은 기록하지 않는다.
+
+연속된 일부 `auth whoami`에서 브라우저 로그인이 요구됐으나 이후 권한/조회 명령은 성공했다. 원인은 확정하지 않았으며 토큰 캐시/refresh 동작을 검증 완료로 주장하지 않는다. 기본 context 전환과 기존 Serve 443 제거의 별도 명령 출력은 확보하지 않았다. LAN 직접 관리 접근 차단 및 VPN OFF 거부 테스트는 아직 미검증이다.
+
+443에서 8443으로 issuer를 전환한 과정은 [Dex 충돌 조사 및 전환 이력](dex-bootstrap.md#조사-및-전환-이력)에 기록한다.
 
 ## 템플릿
 
