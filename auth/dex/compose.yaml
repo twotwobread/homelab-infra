@@ -1,0 +1,28 @@
+name: homelab-auth
+services:
+  dex:
+    image: ghcr.io/dexidp/dex:v2.46.1
+    entrypoint: ["/usr/local/bin/dex"]
+    command: ["serve", "/etc/dex/config.yaml"]
+    user: "1001:1001"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:5556:5556"
+    env_file:
+      - path: ./dex.env.local
+        required: true
+        format: raw
+    volumes:
+      - ./config.local.yaml:/etc/dex/config.yaml:ro
+      - /var/lib/homelab-dex:/var/dex
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
