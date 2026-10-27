@@ -89,7 +89,7 @@ chmod 600 dex.env.local
 sudo install -d -m 0700 -o 1001 -g 1001 /var/lib/homelab-dex
 ```
 
-config의 DNS placeholder 두 곳과 env의 자격 증명을 편집기에서 치환한다. env는 raw 형식이므로 따옴표 없이 입력한다. shell history에 secret을 남기지 않는다. 기존에 443 주소를 쓰는 config는 `cp -n`으로 갱신되지 않으므로 직접 수정한다. 실제 로컬 파일은 Git 제외 대상이며 `git clean -fdx`로 삭제하지 않도록 주의한다. /opt 배포와 혼용하지 않는다.
+config의 `<DEX_DNS_NAME>`과 `<VAULT_DNS_NAME>` 및 env의 자격 증명을 치환한다. Vault용 client secret은 GitHub secret과 별도로 생성하며 [Vault OIDC 준비 절차](vault-oidc.md)를 따른다. Vault client를 아직 사용하지 않더라도 템플릿의 `secretEnv`가 참조하는 값을 준비해야 한다. Vault client를 제외하여 배포하는 경우 해당 staticClients 항목만 제거하고 기존 kubectl client를 유지한다. env는 raw 형식이므로 따옴표 없이 입력한다. shell history에 secret을 남기지 않는다. 기존에 443 주소를 쓰는 config는 `cp -n`으로 갱신되지 않으므로 직접 수정한다. 실제 로컬 파일은 Git 제외 대상이며 `git clean -fdx`로 삭제하지 않도록 주의한다. /opt 배포와 혼용하지 않는다.
 
 ```bash
 git check-ignore config.local.yaml dex.env.local

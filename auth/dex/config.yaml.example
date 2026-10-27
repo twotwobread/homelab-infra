@@ -27,6 +27,11 @@ staticClients:
     public: true
     redirectURIs:
       - http://localhost:8000
+  - id: homelab-vault
+    name: Homelab Vault
+    secretEnv: VAULT_OIDC_CLIENT_SECRET
+    redirectURIs:
+      - https://<VAULT_DNS_NAME>:8200/ui/vault/auth/oidc/oidc/callback
 connectors:
   - type: github
     id: github
