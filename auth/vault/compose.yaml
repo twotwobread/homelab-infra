@@ -1,0 +1,30 @@
+name: homelab-vault
+services:
+  vault:
+    image: hashicorp/vault:2.2.1
+    # Bypass image startup mutations; never use its default dev-mode command.
+    entrypoint: ["/bin/vault"]
+    command: ["server", "-config=/vault/config/vault.hcl"]
+    user: vault
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "${VAULT_BIND_IP:?Set minipc Tailscale IPv4 in .env}:8200:8200"
+    environment:
+      VAULT_ADDR: "https://${VAULT_DNS_NAME:?Set minipc Tailscale DNS name}:8200"
+    volumes:
+      - ./vault.local.hcl:/vault/config/vault.hcl:ro
+      - ./tls.local:/vault/tls:ro
+      - /var/lib/homelab-vault/raft:/vault/data
+      - /var/lib/homelab-vault/audit:/vault/logs
+      - /var/lib/homelab-vault/scratch:/vault/file
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
