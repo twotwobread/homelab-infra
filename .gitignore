@@ -15,6 +15,10 @@ secrets.local/
 # Rendered Tailscale policy with environment-specific addresses
 /network/tailscale/policy.local.hujson
 
+# Local Dex configuration and credentials
+/auth/dex/config.local.yaml
+/auth/dex/dex.env.local
+
 # Local tooling, state and generated dependencies
 .pi/npm/
 node_modules/
