@@ -1,0 +1,35 @@
+// Replace all placeholders before validating in the Tailscale admin console.
+// This template is not directly deployable.
+{
+  "hosts": {
+    "admin-laptop": "<ADMIN_LAPTOP_TAILSCALE_IPV4>",
+    "minipc": "<MINIPC_TAILSCALE_IPV4>",
+    "minipc-lan": "<MINIPC_LAN_IPV4>"
+  },
+
+  "grants": [
+    {
+      "src": ["admin-laptop"],
+      "dst": ["minipc"],
+      "ip": ["tcp:22"]
+    },
+    {
+      "src": ["admin-laptop"],
+      "dst": ["minipc-lan"],
+      "ip": ["tcp:22", "tcp:6443"]
+    }
+  ],
+
+  "tests": [
+    {
+      "src": "admin-laptop",
+      "accept": ["minipc:22"],
+      "deny": ["minipc:6443", "minipc:631", "minipc:18789"]
+    },
+    {
+      "src": "admin-laptop",
+      "accept": ["minipc-lan:22", "minipc-lan:6443"],
+      "deny": ["minipc-lan:631", "minipc-lan:18789"]
+    }
+  ]
+}
