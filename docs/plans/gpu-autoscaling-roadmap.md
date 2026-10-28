@@ -66,6 +66,8 @@ Operator가 별도의 GPU 부족 계산기/스케줄러/EC2 삭제기를 중복 
 
 ## 3. 단계 0 — AWS와 기존 K3s의 호환성 조사
 
+**정적 조사 완료:** [AWS provider/K3s 조사 결과](aws-provider-k3s-feasibility.md). AWS provider/core v1.15.1과 보고된 K3s 버전 소스에서 비-EKS endpoint/version 경로, Custom bootstrap, providerID 보존을 확인했다. **upstream 수정 없이 Custom AMI/bootstrap CPU PoC를 우선 진행**한다. 네트워크·자격 증명 확정과 유료 실행 승인은 별도이며, 런타임 호환성은 아직 미검증이다.
+
 **목표:** 집의 기존 K3s control-plane에 EC2 worker를 붙이는 구성이 선택한 AWS provider 버전에서 가능한지 판정한다. EKS 실습으로 조용히 대체하지 않는다.
 
 ### 조사 항목
@@ -229,4 +231,4 @@ AWS에서 관측한 생명주기를 기준으로 GCP/OCI 구현과 비교하되,
 
 ## 검증 기록
 
-이번 문서 변경에서는 계획과 대화에서 확인한 공개 README 사실을 정리했다. AWS 계정/쿼터·현재 클러스터 상태를 재조회하지 않았고, 소스 코드 수준의 K3s 호환성 조사, Karpenter/Volcano 설치, GPU 실행, VM 종료 검증을 수행하지 않았다.
+초기 계획에 더해 단계 0의 소스 코드 수준 조사를 수행하고 별도 근거 문서에 버전·판정·제약을 기록했다. AWS 계정/쿼터·현재 클러스터 상태는 재조회하지 않았으며, Karpenter/Volcano 설치, GPU 실행, VM 종료 검증은 수행하지 않았다.
