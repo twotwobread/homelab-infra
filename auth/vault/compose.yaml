@@ -13,8 +13,15 @@ services:
       - no-new-privileges:true
     ports:
       - "${VAULT_BIND_IP:?Set minipc Tailscale IPv4 in .env}:8200:8200"
+    networks:
+      default:
+        gw_priority: 1
+      oidc-backchannel: {}
     environment:
-      VAULT_ADDR: "https://${VAULT_DNS_NAME:?Set minipc Tailscale DNS name}:8200"
+      # The shared DNS name resolves to Dex inside this container.
+      # Use loopback for the local Vault CLI, retaining hostname verification.
+      VAULT_ADDR: "https://127.0.0.1:8200"
+      VAULT_TLS_SERVER_NAME: "${VAULT_DNS_NAME:?Set minipc Tailscale DNS name}"
     volumes:
       - ./vault.local.hcl:/vault/config/vault.hcl:ro
       - ./tls.local:/vault/tls:ro
@@ -28,3 +35,9 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+networks:
+  default: {}
+  oidc-backchannel:
+    external: true
+    name: homelab-oidc-backchannel

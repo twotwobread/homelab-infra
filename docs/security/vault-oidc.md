@@ -14,6 +14,10 @@
 - `<VAULT_DNS_NAME>`은 Vault TLS 인증서의 DNS 이름이다. 현재 같은 minipc DNS를 사용하지만 Dex issuer는 8443, Vault UI는 8200으로 구분한다.
 - `secretEnv`는 환경 변수 이름을 받으므로 `$` 접두사나 실제 secret을 YAML에 넣지 않는다.
 
+## 내부 연결 선행 조건
+
+사용자 확인에서 Vault 컨테이너의 Dex 8443 연결은 거절됐지만 호스트에서는 성공했다. Serve의 tailscale0 바인딩과 Docker bridge 경로 차이를 해결하기 위해 [공유 네트워크와 Dex 자체 HTTPS](oidc-backchannel.md)를 추가했다. 현재 Compose는 이 외부 네트워크와 Dex TLS 파일을 요구하므로 아래 재생성 전에 해당 준비를 완료한다. 새 경로의 실제 OIDC 로그인은 아직 미검증이다.
+
 ## 기존 배포 갱신
 
 실행 위치: minipc 저장소의 `auth/dex/`. PR 머지 후 pull하더라도 Git에서 제외된 config.local.yaml/dex.env.local은 자동으로 변경되지 않는다. 템플릿으로 로컬 파일 전체를 덮어써 기존 설정과 자격 증명을 잃지 않는다.

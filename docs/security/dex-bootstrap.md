@@ -70,6 +70,10 @@ API 서버의 로컬 TCP 443 요청
 - kubectl public client `homelab-kubectl`, PKCE S256 필수, callback `http://localhost:8000`. 이것은 GitHub → Dex callback과 다르다.
 - ID token 10분, refresh token 미사용 24시간/절대 168시간. 토큰 발급 후 계정 차단이 즉시 무효화를 보장하지 않는다.
 
+## 내부 HTTPS 추가에 따른 선행 조건
+
+Vault의 서버 간 OIDC 요청을 위해 Compose에 공유 외부 네트워크, DNS alias, Dex 자체 HTTPS를 추가했다. **현재 템플릿으로 최초 실행/갱신할 때는 [내부 TLS 네트워크 절차](oidc-backchannel.md)에 따라 `.env`, `tls.local/`, 네트워크를 먼저 준비**한다. 기존 HTTP 5556/Serve 경로는 유지한다. 아래 기본 배포 명령만으로 새 선행 조건까지 준비되지는 않는다.
+
 ## 저장소에서 직접 실행 (minipc)
 
 최초 clone은 PR 머지 후 수행한다. 기존 clone은 로컬 변경을 확인하고 develop을 fast-forward로 갱신한다.

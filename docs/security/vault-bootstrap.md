@@ -75,6 +75,10 @@ UID/GID 확인 후 그 값으로 `/var/lib/homelab-vault/{raft,audit,scratch}` �
 - 인증서 이름은 CT 공개 로그에 남을 수 있다. HTTPS는 비공개 인증서 이름을 보장하지 않는다.
 - CA 신뢰 검증을 끄거나 HTTP로 대신 공개하지 않는다.
 
+## OIDC 내부 네트워크 추가
+
+현재 Compose는 [Dex–Vault 전용 네트워크](oidc-backchannel.md)를 참조한다. 실행 전 외부 Docker 네트워크를 준비해야 한다. Vault 내부 CLI는 공유 DNS alias 충돌을 피하기 위해 loopback 주소와 `VAULT_TLS_SERVER_NAME`으로 접속하며 서버 api_addr는 그대로 유지한다. 이미 초기화된 사용자는 아래 initialized=false 기대값을 다시 만들려고 init/데이터 삭제를 하지 않는다.
+
 ## 시작과 초기 상태 검증 (위 조건 충족 후)
 
 ```bash

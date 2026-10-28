@@ -18,6 +18,7 @@ secrets.local/
 # Local Dex configuration and credentials
 /auth/dex/config.local.yaml
 /auth/dex/dex.env.local
+/auth/dex/tls.local/
 /hosts/minipc/k3s/config.local.yaml
 /kubernetes/rbac/oidc-owner-cluster-admin.local.yaml
 

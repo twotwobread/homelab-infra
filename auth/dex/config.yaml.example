@@ -6,6 +6,10 @@ storage:
 web:
   # Container interface only; Compose publishes to host loopback exclusively.
   http: 0.0.0.0:5556
+  # Container-only HTTPS for Vault; never publish 8443 on the host.
+  https: 0.0.0.0:8443
+  tlsCert: /etc/dex/tls/server.crt
+  tlsKey: /etc/dex/tls/server.key
 logger:
   level: info
   format: json

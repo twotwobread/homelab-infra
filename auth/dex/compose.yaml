@@ -16,7 +16,14 @@ services:
       - path: ./dex.env.local
         required: true
         format: raw
+    networks:
+      default:
+        gw_priority: 1
+      oidc-backchannel:
+        aliases:
+          - "${DEX_DNS_NAME:?Set the exact Dex issuer hostname in .env}"
     volumes:
+      - ./tls.local:/etc/dex/tls:ro
       - ./config.local.yaml:/etc/dex/config.yaml:ro
       - /var/lib/homelab-dex:/var/dex
     tmpfs:
@@ -26,3 +33,9 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+networks:
+  default: {}
+  oidc-backchannel:
+    external: true
+    name: homelab-oidc-backchannel
