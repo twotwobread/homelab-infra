@@ -14,6 +14,10 @@
 - `<VAULT_DNS_NAME>`은 Vault TLS 인증서의 DNS 이름이다. 현재 같은 minipc DNS를 사용하지만 Dex issuer는 8443, Vault UI는 8200으로 구분한다.
 - `secretEnv`는 환경 변수 이름을 받으므로 `$` 접두사나 실제 secret을 YAML에 넣지 않는다.
 
+## Vault → Dex 네트워크 선행 조건
+
+사용자 조사에서 호스트의 Dex HTTPS 요청은 성공하고 bridge의 Vault 요청은 Connection refused였다. 공유 네트워크/TLS 추가안 대신 [Vault host network 전환](vault-host-network.md)을 선택했다. 전환 후 컨테이너에서 discovery 접근을 확인한 다음 OIDC auth 설정을 진행한다. 이 문서 작성 시 전환 및 실제 Vault OIDC 로그인은 아직 미검증이다.
+
 ## 기존 배포 갱신
 
 실행 위치: minipc 저장소의 `auth/dex/`. PR 머지 후 pull하더라도 Git에서 제외된 config.local.yaml/dex.env.local은 자동으로 변경되지 않는다. 템플릿으로 로컬 파일 전체를 덮어써 기존 설정과 자격 증명을 잃지 않는다.

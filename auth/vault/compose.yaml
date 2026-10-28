@@ -11,8 +11,9 @@ services:
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
-    ports:
-      - "${VAULT_BIND_IP:?Set minipc Tailscale IPv4 in .env}:8200:8200"
+    # Linux host networking; listener addresses MUST be restricted in vault.local.hcl.
+    # Never carry over the former container-wide 0.0.0.0 listeners unchanged.
+    network_mode: host
     environment:
       VAULT_ADDR: "https://${VAULT_DNS_NAME:?Set minipc Tailscale DNS name}:8200"
     volumes:
