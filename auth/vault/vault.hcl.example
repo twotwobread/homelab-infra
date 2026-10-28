@@ -13,8 +13,9 @@ storage "raft" {
 }
 
 listener "tcp" {
-  address         = "0.0.0.0:8200"
-  cluster_address = "0.0.0.0:8201"
+  # Literal Tailscale IPv4, not an environment variable reference.
+  address         = "<MINIPC_TAILSCALE_IPV4>:8200"
+  cluster_address = "127.0.0.1:8201"
   tls_disable     = false
   tls_min_version = "tls12"
   tls_cert_file   = "/vault/tls/server.crt"

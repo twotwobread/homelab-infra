@@ -2,7 +2,7 @@
 
 ## 상태 및 실행 경계
 
-설계·템플릿만 작성한 단계다. 이미지 pull, Compose 실행, TLS 연결, init/unseal, 시크릿 저장은 검증하지 않았다. 서버 작업은 사용자 실행 방식이다. 공유기 외부 노출 검증과 LAN 직접 관리 접근 제한은 보류했으며 완료로 기록하지 않는다.
+최초 bootstrap 이후 사용자가 이미지 실행과 WSL HTTPS health(미초기화 HTTP 501)를 확인했고 UI 초기화/unseal 완료를 보고했다. Vault OIDC 로그인과 시크릿 policy 검증은 아직 미완료다. 현재 Compose는 [host network 전환안](vault-host-network.md)으로 변경됐으며 전환 후 실행 검증은 아직 없다. 서버 작업은 사용자 실행 방식이다. 공유기 외부 노출 검증과 LAN 직접 관리 접근 제한은 보류했으며 완료로 기록하지 않는다.
 
 최초 단계는 minipc OS의 Vault와 관리 노트북만 연결한다. Pod/ServiceAccount 인증, 외부 Secret 동기화, Vault OIDC 로그인, HA는 후속이다. 기존 Dex HTTPS 8443과 K3s API는 변경하지 않는다.
 
@@ -19,15 +19,14 @@
 
 ```text
 관리 노트북 → Tailscale 정책 → minipc Tailscale IPv4:8200
-                             → Docker 게시 포트
-                             → Vault 자체 TLS listener
+                             → host network의 Vault 자체 TLS listener
 ```
 
 외부 주소는 `https://<MINIPC_TAILSCALE_DNS_NAME>:8200`. 기존 Tailscale HTTPS 인증서의 DNS 이름을 사용하지만 Serve/Funnel을 추가하지 않고 Vault가 직접 TLS를 종료한다. 443/8443을 재사용하지 않아 Dex/Traefik과 분리한다. Raft 내부 8201은 호스트에 게시하지 않는다.
 
-Docker 게시 IP를 Tailscale IPv4 하나로 제한하고, Tailscale 정책에는 지정 노트북 → minipc VPN IP의 TCP 8200만 추가한다. 템플릿의 기존 정책은 이번 단계에서 변경하지 않았다. 적용 시 test의 accept에도 minipc:8200을 추가하고 미허용 기기의 거부를 검증한다. Docker NAT/FORWARD가 관여하므로 게시 IP만 보고 격리 완료로 주장하지 않는다. 외부 네트워크/비허용 기기 테스트를 별도로 수행한다.
+host network에서 HCL listener 주소를 Tailscale IPv4 하나로 제한하고, Tailscale 정책에는 지정 노트북 → minipc VPN IP의 TCP 8200만 추가한다. 템플릿의 기존 정책은 이번 단계에서 변경하지 않았다. 적용 시 test의 accept에도 minipc:8200을 추가하고 미허용 기기의 거부를 검증한다. host network에서는 Docker 포트 매핑으로 제한하지 않는다. listener IP 바인딩만으로 모든 유입 경로의 격리 완료를 주장하지 않는다. 외부 네트워크/비허용 기기 테스트를 별도로 수행한다.
 
-같은 Compose 네트워크/호스트 관리자까지 차단하는 구성은 아니다. 컨테이너 내부 listener는 0.0.0.0이며 API에는 TLS와 Vault 인증이 적용된다. 앱을 같은 Docker 네트워크에 임의로 추가하지 않는다.
+Vault는 호스트 네트워크 공간을 공유하므로 localhost 서비스에 접근할 수 있다. 호스트 관리자에 대한 보안 경계는 아니며, API에는 TLS와 Vault 인증을 유지한다. API를 0.0.0.0에 바인딩하지 않는다.
 
 **Pod는 이 관리 경로를 자동으로 사용할 수 없다.** 후속 단계에서 LAN 제한 TLS listener 경로 또는 전용 VPN 프록시 등과 네트워크 정책을 별도로 설계한다. 관리 API를 편의상 0.0.0.0에 게시하지 않는다.
 
@@ -55,7 +54,7 @@ chmod 600 .env
 chmod 644 vault.local.hcl
 ```
 
-.env의 IP/DNS, HCL의 DNS를 편집기로 치환한다. 현재 버전의 공식 이미지 사용자 UID/GID는 숫자로 가정하지 않고 확인한다. 다음 명령은 이미지 다운로드와 일회성 컨테이너 생성이며 아직 Vault 서버나 init은 실행하지 않는다.
+.env의 DNS, HCL의 DNS와 Tailscale IPv4를 편집기로 치환한다. listener IP는 HCL의 실제 값이며 .env로 자동 치환되지 않는다. 현재 버전의 공식 이미지 사용자 UID/GID는 숫자로 가정하지 않고 확인한다. 다음 명령은 이미지 다운로드와 일회성 컨테이너 생성이며 아직 Vault 서버나 init은 실행하지 않는다.
 
 ```bash
 docker pull hashicorp/vault:2.2.1
