@@ -39,6 +39,8 @@ OCI 문서에 custom cloud-init/bootstrap 항목이 있어도 K3s 지원의 증�
 
 ## 2. 목표 구조와 책임
 
+후속 합의로 gateway도 온디맨드 생명주기 관리에 포함한다. [공유 Cloud Environment와 gateway 설계](cloud-gateway-lifecycle.md)에 site-to-site 패킷 경로, 공유/중복 생성 방지, worker 종료 후 gateway 회수, 비용 및 다른 개발 머신의 이어받기 절차를 기록했다. Gateway 네트워크를 먼저 수동/IaC로 검증하고, 단계 3에서 Environment/Workload controller로 자동화한다.
+
 ```text
 Workload CR
     ↓ 우리 Operator
@@ -163,6 +165,8 @@ API 이름/그룹은 아직 확정하지 않는다. 다음은 후보 필드이�
 첫 단계는 공유 용량 기반으로 설계한다. CR마다 특정 VM을 직접 소유하는 모델은 별도 확장이다.
 
 ### Controller 계약
+
+공유 `CloudEnvironment`를 참조하고 gateway/route 준비 이후에 하위 Job을 만든다. Environment controller는 별도 책임으로 gateway와 연결의 준비·유휴·회수를 관리한다. CR 이름/스키마는 아직 후보이며 상세 경계는 [gateway 설계](cloud-gateway-lifecycle.md)를 따른다.
 
 - 유효하지 않은 요청과 허용 GPU/큐 범위 검증
 - 하위 Job/Volcano Job/PodGroup의 명확한 소유권
