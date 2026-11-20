@@ -4,32 +4,157 @@
   "hosts": {
     "admin-laptop": "<ADMIN_LAPTOP_TAILSCALE_IPV4>",
     "minipc": "<MINIPC_TAILSCALE_IPV4>",
-    "minipc-lan": "<MINIPC_LAN_IPV4>"
+    "minipc-lan": "<MINIPC_LAN_IPV4>",
+    "homelab-pi": "<PI_TAILSCALE_IPV4>",
+    "homelab-pi-lan": "<PI_LAN_IPV4>",
+    "iphone": "<IPHONE_TAILSCALE_IPV4>",
+    "ipad": "<IPAD_TAILSCALE_IPV4>"
   },
-
   "grants": [
     {
-      "src": ["admin-laptop"],
-      "dst": ["minipc"],
-      "ip": ["tcp:22", "tcp:8443"]
+      "src": [
+        "admin-laptop",
+        "iphone",
+        "ipad"
+      ],
+      "dst": [
+        "minipc"
+      ],
+      "ip": [
+        "tcp:22",
+        "tcp:443",
+        "tcp:6767",
+        "tcp:8443",
+        "tcp:8200"
+      ]
     },
     {
-      "src": ["admin-laptop"],
-      "dst": ["minipc-lan"],
-      "ip": ["tcp:22", "tcp:6443"]
+      "src": [
+        "admin-laptop"
+      ],
+      "dst": [
+        "minipc-lan"
+      ],
+      "ip": [
+        "tcp:22",
+        "tcp:6443"
+      ]
+    },
+    {
+      "src": [
+        "admin-laptop"
+      ],
+      "dst": [
+        "homelab-pi"
+      ],
+      "ip": [
+        "tcp:22"
+      ]
+    },
+    {
+      "src": [
+        "iphone",
+        "ipad",
+        "minipc"
+      ],
+      "dst": [
+        "admin-laptop"
+      ],
+      "ip": [
+        "tcp:22",
+        "tcp:6767"
+      ]
+    },
+    {
+      "src": [
+        "tag:k3s-worker"
+      ],
+      "dst": [
+        "minipc-lan"
+      ],
+      "ip": [
+        "tcp:6443",
+        "udp:8472"
+      ]
+    },
+    {
+      "src": [
+        "minipc",
+        "minipc-lan",
+        "homelab-pi-lan",
+        "tag:k3s-worker"
+      ],
+      "dst": [
+        "tag:k3s-worker"
+      ],
+      "ip": [
+        "udp:8472"
+      ]
+    },
+    {
+      "src": [
+        "tag:k3s-worker"
+      ],
+      "dst": [
+        "homelab-pi-lan"
+      ],
+      "ip": [
+        "udp:8472"
+      ]
     }
   ],
-
   "tests": [
     {
       "src": "admin-laptop",
-      "accept": ["minipc:22", "minipc:8443"],
-      "deny": ["minipc:443", "minipc:6443", "minipc:631", "minipc:18789"]
+      "accept": [
+        "minipc:22",
+        "minipc:443",
+        "minipc:6767",
+        "minipc:8443",
+        "minipc:8200",
+        "homelab-pi:22"
+      ],
+      "deny": [
+        "minipc:6443",
+        "minipc:631",
+        "minipc:18789"
+      ]
     },
     {
       "src": "admin-laptop",
-      "accept": ["minipc-lan:22", "minipc-lan:6443"],
-      "deny": ["minipc-lan:631", "minipc-lan:18789"]
+      "accept": [
+        "minipc-lan:22",
+        "minipc-lan:6443"
+      ],
+      "deny": [
+        "minipc-lan:631",
+        "minipc-lan:18789"
+      ]
+    },
+    {
+      "src": "iphone",
+      "accept": [
+        "minipc:6767"
+      ],
+      "deny": [
+        "homelab-pi:22"
+      ]
+    },
+    {
+      "src": "tag:k3s-worker",
+      "accept": [
+        "minipc-lan:6443"
+      ],
+      "deny": [
+        "minipc-lan:22",
+        "minipc:6443",
+        "homelab-pi:22"
+      ]
     }
-  ]
+  ],
+  "tagOwners": {
+    "tag:k3s-worker": [
+      "autogroup:owner"
+    ]
+  }
 }

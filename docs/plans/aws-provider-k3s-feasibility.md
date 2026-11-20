@@ -1,5 +1,7 @@
 # 단계 0 조사: AWS Karpenter provider와 홈랩 K3s
 
+> 후속 실험에서 노드별 Tailscale 직접 등록으로 EC2 수동 조인과 파드 통신을 확인했다. 이 결과는 AWS provider의 자동 부트스트랩 호환성을 검증한 결과와 별개다. [검증 기록](../validation/k3s-seoul-ec2-vxlan.md)
+
 ## 결론
 
 **소스/문서 조사 결과: upstream AWS provider를 수정하지 않고 Custom AMI/bootstrap으로 CPU PoC를 시도할 근거가 있다. EKS 전환이나 새 provider 개발을 선행하지 않는다.**
