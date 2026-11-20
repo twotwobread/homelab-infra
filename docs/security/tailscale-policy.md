@@ -2,7 +2,7 @@
 
 ## 출처와 상태
 
-사용자가 관리 화면에 적용한 정책을 대화로 제공했고 VPN을 통한 SSH·API 접속 성공을 보고했다. 그 정책의 주소를 placeholder로 바꾸고, 이후 Dex 8443 구성에 맞춰 VPN IP의 TCP 8443 허용 및 443 거부 테스트를 추가해 [템플릿](../../network/tailscale/policy.hujson.example)에 저장했다. 에이전트가 관리 화면이나 외부 네트워크에서 재검증한 것은 아니다. 외부 핫스팟 검증 여부는 별도로 확인한다.
+[정책 예제](../../network/tailscale/policy.hujson.example)는 2026-11-20 검증에 사용한 직접 연결 구성을 반영한다. 관리 노트북에서 Pi의 Tailscale 주소로 SSH 접속했고, 두 온프레미스 노드와 EC2 사이의 파드 HTTP 및 EC2의 클러스터 DNS를 확인했다. [검증 기록](../validation/k3s-seoul-ec2-vxlan.md)
 
 이 템플릿은 기기 등록·경로 광고·경로 승인을 수행하지 않는다. placeholder가 남은 상태로는 적용할 수 없다. IP 주소 자체는 인증 비밀이 아니지만 환경 정보를 분리하고 재사용하기 위해 템플릿화했다.
 
@@ -10,13 +10,18 @@
 
 | 출발지 | 목적지 | 허용 |
 | --- | --- | --- |
-| 지정 Windows 노트북 | minipc Tailscale IPv4 | TCP 22, 8443 |
-| 지정 Windows 노트북 | minipc LAN IPv4 | TCP 22, 6443 |
+| 관리 노트북, iPhone, iPad | minipc Tailscale IPv4 | TCP 22, 443, 6767, 8443, 8200 |
+| 관리 노트북 | minipc LAN IPv4 | TCP 22, 6443 |
+| 관리 노트북 | Pi Tailscale IPv4 | TCP 22 |
+| iPhone, iPad, minipc | 관리 노트북 | TCP 22, 6767 |
+| EC2 워커 태그 | minipc LAN IPv4 | TCP 6443, UDP 8472 |
+| minipc Tailscale 및 LAN IPv4, Pi LAN IPv4, EC2 워커 태그 | EC2 워커 태그 | UDP 8472 |
+| EC2 워커 태그 | Pi LAN IPv4 | UDP 8472 |
 
 - `hosts`는 정책 내부의 주소 별칭이며 MagicDNS나 SSH config 설정이 아니다.
 - Windows가 VPN을 담당하며 WSL은 그 경로로 접속한다.
 - 기존 LAN 주소를 유지하기 위해 minipc가 자기 LAN IPv4의 `/32` 경로를 광고하고 관리 화면에서 승인해야 한다. 현재 사용자는 해당 구성의 연결 성공을 보고했다.
-- Tailscale IP의 SSH 허용은 별도 접근 경로로 유지하고 Dex HTTPS는 8443으로 제공한다. 해당 IP의 API 6443 및 이전 Dex 443 접근은 허용하지 않는다. 실제 정책의 이전 443 허용 제거 여부는 적용 시 확인한다.
+- Flannel은 온프레미스 노드의 LAN 주소를 사용한다. Pi도 자기 LAN 주소 한 개를 /32로 광고하고 승인한다. EC2는 승인된 경로를 수락한다. UDP 규칙은 실제 VXLAN 출발지와 목적지 주소에 맞춘다.
 - 일반 LAN으로 직접 전달되는 트래픽은 이 정책의 통제 대상이 아니다.
 - 같은 사용자 계정의 새 기기라도 지정 출발지 주소가 아니면 이 규칙으로 접근할 수 없다. 기기 삭제·재등록 시 주소 매핑을 확인한다.
 - Tailscale SSH 정책은 없으며 기존 OpenSSH 인증을 사용한다.
@@ -75,6 +80,9 @@ cp network/tailscale/policy.hujson.example network/tailscale/policy.local.hujson
 | `<ADMIN_LAPTOP_TAILSCALE_IPV4>` | Windows PowerShell의 `tailscale ip -4` |
 | `<MINIPC_TAILSCALE_IPV4>` | minipc의 `tailscale ip -4` |
 | `<MINIPC_LAN_IPV4>` | 기존 SSH/API가 사용하는 minipc LAN 주소 |
+| `<PI_TAILSCALE_IPV4>` | Pi의 `tailscale ip -4` |
+| `<PI_LAN_IPV4>` | Pi의 기존 LAN 주소 |
+| `<IPHONE_TAILSCALE_IPV4>`, `<IPAD_TAILSCALE_IPV4>` | 각 기기의 Tailscale IPv4 |
 
 `policy.local.hujson`은 Git에서 제외한다. 토큰·키·OAuth secret을 정책에 넣지 않는다. 기존 문서의 과거 조사에 있는 LAN 주소까지 소급 익명화한 것은 아니다.
 
@@ -88,6 +96,6 @@ cp network/tailscale/policy.hujson.example network/tailscale/policy.local.hujson
 6. 외부 네트워크에서도 기존 LAN 주소 기반 SSH/API를 확인한다. 집 LAN에서의 성공만으로 subnet routing을 증명하지 않는다.
 7. 필요하면 열려 있는 서비스의 비허용 포트도 연결 차단을 검증한다. 서비스가 꺼진 포트의 실패만으로 정책의 차단 효과를 판정하지 않는다.
 
-일반 ICMP ping은 허용하지 않았으므로 실패할 수 있다. 이 정책은 TCP 접속으로 검증한다. 문제가 생기면 관리 화면에서 이전 정책으로 되돌릴 수 있지만, 전체 허용 정책으로 복구하는 경우 넓은 권한도 함께 복구됨을 유의한다.
+일반 ICMP ping은 허용하지 않았으므로 실패할 수 있다. SSH와 API는 TCP로, VXLAN은 EC2와 각 온프레미스 노드 사이의 Pod IP 직접 HTTP 및 경로 확인으로 검증한다. 문제가 생기면 관리 화면에서 이전 정책으로 되돌릴 수 있지만, 전체 허용 정책으로 복구하는 경우 넓은 권한도 함께 복구됨을 유의한다.
 
 공식 참고: https://tailscale.com/docs/reference/syntax/policy-file

@@ -1,5 +1,7 @@
 # AWS Karpenter provider → Volcano → Workload Operator 계획
 
+> 현재 네트워크 방향은 노드별 Tailscale 직접 등록이다. 서울 EC2 한 대의 수동 조인과 온프레미스 두 노드와의 파드 통신을 검증했다. 아래 공유 게이트웨이 관련 단계는 이전 설계의 기록이며 현재 PoC의 선행 조건에서 제외한다. Karpenter 자동 증설과 회수는 후속 검증 범위다. [현재 구성과 실측 결과](../validation/k3s-seoul-ec2-vxlan.md)
+
 ## 상태와 범위
 
 **상태: 사용자와 합의한 진행 방향을 기록한 계획. 구현·통합 검증 완료가 아니다.**
