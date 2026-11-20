@@ -58,6 +58,10 @@ API 서버의 로컬 TCP 443 요청
 - 호스트 소켓 목록 `ss`만으로 NAT가 처리하는 포트를 모두 알 수 없다. 같은 URL도 원격 클라이언트와 호스트 자체 요청의 경로가 다를 수 있다.
 - 최종 `auth whoami` 성공은 실제 토큰 인증 성공의 증거다. 모든 네트워크 경로의 패킷 추적이나 LAN 차단까지 완료됐다는 의미는 아니다.
 
+## 신원 관리 범위
+
+현재 Dex는 GitHub 신원을 Kubernetes/Vault에 연결하는 공통 OIDC 발급자로 유지한다. 자체 사용자·그룹 관리의 한계와 향후 Keycloak 대체 검토 조건은 [신원 연동 경계](identity-boundaries.md)에 정리한다. Keycloak 배포·전환은 이번 범위에 포함하지 않는다.
+
 ## 구성
 
 - 외부 issuer: `https://<DEX_DNS_NAME>:8443`
