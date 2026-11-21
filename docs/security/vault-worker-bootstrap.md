@@ -13,6 +13,14 @@
 
 두 Vault 역할 모두 기본 정책 없이 TTL과 명시적 최대 TTL이 5분인 서비스 토큰을 발급한다. 후속 Job, Secrets Manager 리소스 및 AWS IAM 정책, tailnet 정책 적용, 실제 시크릿 입력과 Karpenter 설치는 별도 작업이다.
 
+## Tailscale 가입 키 발급과 수명
+
+첫 CPU 워커 검증은 짧은 유효기간의 일회용 가입 키 한 개를 미리 준비해 진행한다. 위의 Vault 경로에는 **발급된 기기 가입 키**를 넣는다. Vault 역할의 5분 TTL은 Vault 로그인 토큰에 적용되며, Tailscale 가입 키의 만료와는 별개다.
+
+반복 증설에서는 홈랩의 발급 자동화가 Vault에 별도로 보관한 Tailscale OAuth 클라이언트 자격 증명으로 단기 API 액세스 토큰을 얻는다. OAuth 권한은 가입 키 발급과 워커 태그로 제한한다. 그 토큰으로 새 EC2마다 짧게 유효한 일회용 가입 키를 발급한다. 기기 승인이 켜져 있으면 사전 승인 옵션을 사용한다. 각 워커가 자신에게 할당된 키만 읽도록 AWS 전달 경로를 구성한다. 여러 워커가 동시에 기동할 때 같은 일회용 키를 소비하지 않는지 검증한다. EC2로 전달되는 값은 가입 키이며, OAuth 클라이언트 시크릿과 API 토큰은 발급 자동화에만 남긴다. OAuth 발급과 워커별 키 전달 구현은 후속 범위다. [Tailscale OAuth 클라이언트](https://tailscale.com/docs/features/oauth-clients) · [Tailscale 가입 키](https://tailscale.com/docs/features/access-control/auth-keys)
+
+짧은 유효기간과 일회용 설정은 노출 시 악용 가능한 시간과 가입 횟수를 줄인다. 정상 워커가 쓰기 전에 키가 노출되면 다른 기기가 워커 태그로 가입할 수 있다. 이 경우 미사용 키를 폐기하고, 이미 가입한 의심 기기는 관리 콘솔에서 등록을 해제한다. 키 만료나 폐기 이후에도 등록된 기기는 별도로 확인한다.
+
 ## 적용 전 전제
 
 - Vault의 TLS 이름과 CA를 홈랩 Job과 가입을 마친 워커에서 검증하고, 두 호출자의 Vault TCP 8200 접근을 각각 확인한다. 기존 리스너를 공개하지 않는다.
